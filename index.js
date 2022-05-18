@@ -22,15 +22,54 @@ connectDB((err) => {
 app.use(cors());
 app.use(express.json());
 
+// Verify JWT
+function verifyJWT(req, res, next) {
+	const authHeader = req.headers.authorization;
+
+	if (!authHeader) {
+		return res.status(401).send({ message: "Unauthorized Access" });
+	}
+
+	const token = authHeader.split(" ")[1];
+
+	jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+		if (err) {
+			return res.status(403).send({ message: "Forbidden Access" });
+		}
+
+		console.log("Decoded: ", decoded);
+		req.decoded = decoded;
+	});
+
+	console.log("Inside VerifyJWT: ", authHeader);
+	next();
+}
+
 app.get("/", (req, res) => {
 	res.send("Running Server");
 });
 
-app.get("/tasks", (req, res) => {
+// JWT
+app.post("/login", (req, res) => {
+	const email = req.body;
+	console.log("JWT: ", email);
+
+	const maxAge = 3 * 24 * 60 * 60;
+
+	const accessToken = jwt.sign(email, process.env.ACCESS_TOKEN_SECRET, {
+		expiresIn: maxAge,
+	});
+	res.send({ accessToken });
+});
+
+app.get("/tasks", verifyJWT, (req, res) => {
+	const email = req.query;
+	console.log("Email: ", email);
+
 	let tasks = [];
 
 	db.collection("tasks")
-		.find()
+		.find(email)
 		.forEach((task) => tasks.push(task))
 		.then(() => res.status(200).json(tasks))
 		.catch((error) =>
