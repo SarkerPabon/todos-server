@@ -49,3 +49,20 @@ app.post("/tasks", (req, res) => {
 			res.status(500).json({ error: "Could not create new document" })
 		);
 });
+
+app.patch("/tasks/:id", (req, res) => {
+	const updates = req.body;
+	console.log("Updates: ", updates);
+	console.log("Updating Reuest ID: ", req.params.id);
+
+	if (ObjectId.isValid(req.params.id)) {
+		db.collection("tasks")
+			.updateOne({ _id: ObjectId(req.params.id) }, { $set: updates })
+			.then((result) => res.status(200).json(result))
+			.catch((err) =>
+				res.status(500).json({ error: "Could not update the document" })
+			);
+	} else {
+		res.status(500).json({ error: "Not valid document ID" });
+	}
+});
