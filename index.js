@@ -25,3 +25,15 @@ app.use(express.json());
 app.get("/", (req, res) => {
 	res.send("Running Server");
 });
+
+app.get("/tasks", (req, res) => {
+	let tasks = [];
+
+	db.collection("tasks")
+		.find()
+		.forEach((task) => tasks.push(task))
+		.then(() => res.status(200).json(tasks))
+		.catch((error) =>
+			res.status(500).json({ error: "Could not fetch the documents" })
+		);
+});
