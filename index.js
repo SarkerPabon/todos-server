@@ -37,3 +37,15 @@ app.get("/tasks", (req, res) => {
 			res.status(500).json({ error: "Could not fetch the documents" })
 		);
 });
+
+app.post("/tasks", (req, res) => {
+	const task = req.body;
+	console.log("Add Task: ", task);
+
+	db.collection("tasks")
+		.insertOne(task)
+		.then((result) => res.status(201).json(result))
+		.catch((err) =>
+			res.status(500).json({ error: "Could not create new document" })
+		);
+});
